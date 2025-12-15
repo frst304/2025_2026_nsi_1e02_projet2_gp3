@@ -29,12 +29,22 @@ def preparer_donnees_pour_graphique_deces(dataframe):
     dataframe_copie = dataframe.copy()
     
     nom_colonne_date = 'date'
-    nom_colonne_deces = 'dc_tot'
-    colonnes_requises = [nom_colonne_date, nom_colonne_deces]
+    colonnes_indicateurs = ['dc_tot', 'hosp', 'rea']
+    colonnes_requises = [nom_colonne_date] + colonnes_indicateurs
     
-    verifier_colonnes_necessaires(dataframe_copie, colonnes_requises)
+    verifier_colonnes_necessaires(dataframe_copie, [nom_colonne_date])
+    
+    colonnes_disponibles = [col for col in colonnes_indicateurs if col in dataframe_copie.columns]
+    if not colonnes_disponibles:
+        raise KeyError(
+            f"Aucune colonne d'indicateur trouvée. Colonnes recherchées : {colonnes_indicateurs}. "
+            f"Colonnes disponibles : {list(dataframe.columns)}"
+        )
+    
     convertir_colonne_date_en_datetime(dataframe_copie, nom_colonne_date)
-    dataframe_copie = filtrer_donnees_valides(dataframe_copie, colonnes_requises)
+    
+    colonnes_pour_filtre = [nom_colonne_date] + colonnes_disponibles
+    dataframe_copie = filtrer_donnees_valides(dataframe_copie, colonnes_pour_filtre)
     dataframe_copie = trier_donnees_par_date(dataframe_copie, nom_colonne_date)
     
     if len(dataframe_copie) == 0:
