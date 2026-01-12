@@ -1,0 +1,27 @@
+import matplotlib.pyplot as plt
+
+def comparer_regions(df, regions):
+    """
+    regions : liste de régions à comparer
+    exemple : ["Île-de-France", "Auvergne-Rhône-Alpes"]
+    """
+
+    plt.figure(figsize=(10, 5))
+
+    for region in regions:
+        df_region = df[df["region"] == region]
+
+        evolution = (
+            df_region.groupby("date")["nouvelles_hospitalisations"]
+            .sum()
+        )
+
+        plt.plot(evolution.index, evolution.values, label=region)
+
+    plt.title("Comparaison des nouvelles hospitalisations Covid par région")
+    plt.xlabel("Date")
+    plt.ylabel("Nouvelles hospitalisations")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
