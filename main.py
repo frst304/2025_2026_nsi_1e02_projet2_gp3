@@ -1,10 +1,15 @@
 from import_datas import importer_donnees_covid19
 from tkinter_config import creer_fenetre
+from Compare_region import REGION_COL_CANDIDATES
 
 
 def main():
     donnees = importer_donnees_covid19()
-    fenetre = creer_fenetre()
+    region_col = next(
+        (col for col in REGION_COL_CANDIDATES if col in donnees.columns),
+        None,
+    )
+    fenetre = creer_fenetre(donnees, region_col)
     fenetre.mainloop()
 
 
