@@ -1,8 +1,14 @@
 import tkinter as tk
+import pandas as pd
 from tkinter import messagebox
 from tkinter import ttk
 
-from Compare_region import comparer_regions, _strip_accents
+from compare_region import (
+    DATE_COL_CANDIDATES,
+    comparer_regions,
+    _first_existing_column,
+    _strip_accents,
+)
 
 
 def creer_fenetre(donnees, region_col):
@@ -31,6 +37,12 @@ def creer_fenetre(donnees, region_col):
         font=("Segoe UI", 11),
         background="#f4f6f8",
         foreground="#2d3b55",
+    )
+    style.configure(
+        "Stats.TLabel",
+        font=("Segoe UI", 12, "bold"),
+        background="#f4f6f8",
+        foreground="#1f2a44",
     )
     style.configure(
         "Nav.TButton",
@@ -226,6 +238,61 @@ def creer_fenetre(donnees, region_col):
         style="Titre.TLabel",
     )
     titre_home.pack(pady=30)
+
+    def _resume_national():
+        date_col = _first_existing_column(donnees, DATE_COL_CANDIDATES)
+        if date_col:
+            donnees_dates = donnees.copy()
+            donnees_dates[date_col] = pd.to_datetime(
+                donnees_dates[date_col], errors="coerce"
+            )
+            date_max = donnees_dates[date_col].max()
+            if pd.notna(date_max):
+                donnees_filtrees = donnees_dates[
+                    donnees_dates[date_col] == date_max
+                ]
+            else:
+                donnees_filtrees = donnees
+        else:
+            donnees_filtrees = donnees
+
+        total_hosp = (
+            donnees_filtrees["hosp"].sum()
+            if "hosp" in donnees_filtrees.columns
+            else None
+        )
+        total_deces = (
+            donnees_filtrees["dchosp"].sum()
+            if "dchosp" in donnees_filtrees.columns
+            else None
+        )
+        return total_hosp, total_deces
+
+    total_hosp, total_deces = _resume_national()
+    home_stats = tk.Frame(page_home, bg="#f4f6f8")
+    home_stats.pack(pady=10)
+
+    label_hosp = ttk.Label(
+        home_stats,
+        text=(
+            f"Hospitalisations (actuels): {int(total_hosp):,}".replace(",", " ")
+            if total_hosp is not None
+            else "Hospitalisations (actuels): indisponible"
+        ),
+        style="Stats.TLabel",
+    )
+    label_hosp.pack(pady=5)
+
+    label_deces = ttk.Label(
+        home_stats,
+        text=(
+            f"Deces hopital (cumul): {int(total_deces):,}".replace(",", " ")
+            if total_deces is not None
+            else "Deces hopital (cumul): indisponible"
+        ),
+        style="Stats.TLabel",
+    )
+    label_deces.pack(pady=5)
 
     afficher_page(page_home)
 
