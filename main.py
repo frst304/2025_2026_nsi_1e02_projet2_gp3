@@ -1,6 +1,6 @@
 from import_datas import importer_donnees_covid19
 from tkinter_config import creer_fenetre
-from Compare_region import REGION_COL_CANDIDATES
+from compare_region import REGION_COL_CANDIDATES
 
 
 def main():
