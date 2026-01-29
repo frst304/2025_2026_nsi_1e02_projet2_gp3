@@ -14,6 +14,6 @@ def importer_donnees_covid19():
     response.raise_for_status()
 
     contenu = response.content.decode("utf-8", errors="replace")
-    dataframe = pd.read_csv(StringIO(contenu), sep=",", low_memory=False)
+    
     
     return dataframe
