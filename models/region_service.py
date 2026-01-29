@@ -23,7 +23,7 @@ HOSP_COL_CANDIDATES = [
 ]
 
 
-def _first_existing_column(df, candidates):
+def first_existing_column(df, candidates):
     for col in candidates:
         if col in df.columns:
             return col
@@ -39,7 +39,7 @@ def _normalize_text(text):
     ).strip().lower()
 
 
-def _strip_accents(text):
+def strip_accents(text):
     normalized = unicodedata.normalize("NFD", str(text))
     return "".join(
         char for char in normalized if unicodedata.category(char) != "Mn"
@@ -55,10 +55,6 @@ def comparer_regions(
     normalize_regions=True,
     value_label=None,
 ):
-    """
-    regions : liste de regions a comparer
-    exemple : ["Ile-de-France", "Auvergne-Rhone-Alpes"]
-    """
     if isinstance(regions, str):
         regions = [regions]
 
@@ -66,11 +62,11 @@ def comparer_regions(
         raise ValueError("La liste des regions a comparer est vide.")
 
     if region_col is None:
-        region_col = _first_existing_column(df, REGION_COL_CANDIDATES)
+        region_col = first_existing_column(df, REGION_COL_CANDIDATES)
     if date_col is None:
-        date_col = _first_existing_column(df, DATE_COL_CANDIDATES)
+        date_col = first_existing_column(df, DATE_COL_CANDIDATES)
     if value_col is None:
-        value_col = _first_existing_column(df, HOSP_COL_CANDIDATES)
+        value_col = first_existing_column(df, HOSP_COL_CANDIDATES)
 
     missing = []
     if region_col is None:
@@ -106,7 +102,7 @@ def comparer_regions(
         evolution = df_region.groupby(date_col)[value_col].sum().sort_index()
         evolution.index = pd.to_datetime(evolution.index, errors="coerce")
         evolution = evolution[~evolution.index.isna()].sort_index()
-        label = _strip_accents(region) if normalize_regions else str(region)
+        label = strip_accents(region) if normalize_regions else str(region)
         plt.plot(evolution.index, evolution.values, label=label)
         traces += 1
 
@@ -133,7 +129,7 @@ def comparer_regions(
     plt.grid(True)
     plt.tight_layout()
     regions_titre = " vs ".join(
-        _strip_accents(r) if normalize_regions else str(r) for r in regions
+        strip_accents(r) if normalize_regions else str(r) for r in regions
     )
     fenetre_titre = (
         f"{value_label or 'Comparaison'} - {regions_titre}"
