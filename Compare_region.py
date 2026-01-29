@@ -142,7 +142,7 @@ def comparer_regions(
         fig.canvas.manager.set_window_title(fenetre_titre)
     except Exception:
         pass
-    plt.show()
+    
 
     if regions_absentes:
         print(
