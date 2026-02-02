@@ -31,9 +31,8 @@ class CompareRegionController:
         self.indicateur_labels = [label for label, _ in self.indicateurs_disponibles]
 
         self._fill_view()
-        self.view.set_on_compare_callback(self.lancer_comparaison)
         self.view.set_on_selection_change(self.actualiser_graphique)
-        self.actualiser_graphique()
+        self.view.clear_plot("Selectionnez deux regions et un indicateur.")
 
     def _regions_disponibles(self):
         if not self.region_col:
@@ -101,7 +100,7 @@ class CompareRegionController:
         region_2 = self.view.get_region_2()
         indicateur_label = self.view.get_indicateur_label()
         if not region_1 or not region_2 or not indicateur_label:
-            self.view.clear_plot("Selection incomplete.")
+            self.view.clear_plot("Selectionnez deux regions et un indicateur.")
             return
         indicateur_col = None
         for label, col in self.indicateurs_disponibles:

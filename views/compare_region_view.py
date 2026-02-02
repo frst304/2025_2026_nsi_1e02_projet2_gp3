@@ -68,19 +68,6 @@ class CompareRegionView:
         )
         self.liste_indicateur.pack()
 
-        self.bouton_lancer = tk.Button(
-            self.form_frame,
-            text="Comparer",
-            command=self._on_compare_click,
-            width=18,
-            bg="#2f6fed",
-            fg="#ffffff",
-            activebackground="#3c7bff",
-            activeforeground="#ffffff",
-            relief="flat",
-        )
-        self.bouton_lancer.pack(pady=20)
-
         self.graph_frame = tk.Frame(self.content_frame, bg="#f4f6f8")
         self.graph_frame.grid(row=0, column=1, sticky="nsew", padx=(30, 0))
         self.graph_frame.grid_rowconfigure(0, weight=1)
@@ -91,10 +78,6 @@ class CompareRegionView:
         self.canvas = FigureCanvasTkAgg(self.figure, master=self.graph_frame)
         self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
 
-    def _on_compare_click(self):
-        if self.on_compare_callback:
-            self.on_compare_callback()
-
     def set_on_selection_change(self, callback):
         self.liste_region_1.bind("<<ComboboxSelected>>", lambda _e: callback())
         self.liste_region_2.bind("<<ComboboxSelected>>", lambda _e: callback())
@@ -103,15 +86,12 @@ class CompareRegionView:
     def set_regions(self, regions):
         self.liste_region_1["values"] = regions
         self.liste_region_2["values"] = regions
-        if regions:
-            self.region_1_var.set(regions[0])
-        if len(regions) > 1:
-            self.region_2_var.set(regions[1])
+        self.region_1_var.set("")
+        self.region_2_var.set("")
 
     def set_indicateurs(self, indicateur_labels):
         self.liste_indicateur["values"] = indicateur_labels
-        if indicateur_labels:
-            self.indicateur_var.set(indicateur_labels[0])
+        self.indicateur_var.set("")
 
     def get_region_1(self):
         return self.region_1_var.get().strip()
