@@ -68,6 +68,36 @@ class CompareRegionView:
         )
         self.liste_indicateur.pack()
 
+        ttk.Label(
+            self.form_frame,
+            text="Date de debut:",
+            style="Texte.TLabel",
+        ).pack(pady=(15, 5))
+        self.start_date_var = tk.StringVar()
+        self.liste_date_debut = ttk.Combobox(
+            self.form_frame,
+            textvariable=self.start_date_var,
+            values=[],
+            state="readonly",
+            width=37,
+        )
+        self.liste_date_debut.pack()
+
+        ttk.Label(
+            self.form_frame,
+            text="Date de fin:",
+            style="Texte.TLabel",
+        ).pack(pady=(15, 5))
+        self.end_date_var = tk.StringVar()
+        self.liste_date_fin = ttk.Combobox(
+            self.form_frame,
+            textvariable=self.end_date_var,
+            values=[],
+            state="readonly",
+            width=37,
+        )
+        self.liste_date_fin.pack()
+
         self.graph_frame = tk.Frame(self.content_frame, bg="#f4f6f8")
         self.graph_frame.grid(row=0, column=1, sticky="nsew", padx=(30, 0))
         self.graph_frame.grid_rowconfigure(0, weight=1)
@@ -82,6 +112,8 @@ class CompareRegionView:
         self.liste_region_1.bind("<<ComboboxSelected>>", lambda _e: callback())
         self.liste_region_2.bind("<<ComboboxSelected>>", lambda _e: callback())
         self.liste_indicateur.bind("<<ComboboxSelected>>", lambda _e: callback())
+        self.liste_date_debut.bind("<<ComboboxSelected>>", lambda _e: callback())
+        self.liste_date_fin.bind("<<ComboboxSelected>>", lambda _e: callback())
 
     def set_regions(self, regions):
         self.liste_region_1["values"] = regions
@@ -93,6 +125,20 @@ class CompareRegionView:
         self.liste_indicateur["values"] = indicateur_labels
         self.indicateur_var.set("")
 
+    def set_dates(self, dates):
+        """
+        Initialise les listes deroulantes de dates avec les dates disponibles.
+        """
+        self.liste_date_debut["values"] = dates
+        self.liste_date_fin["values"] = dates
+        if dates:
+            # Par defaut on choisit l'intervalle complet
+            self.start_date_var.set(dates[0])
+            self.end_date_var.set(dates[-1])
+        else:
+            self.start_date_var.set("")
+            self.end_date_var.set("")
+
     def get_region_1(self):
         return self.region_1_var.get().strip()
 
@@ -101,6 +147,12 @@ class CompareRegionView:
 
     def get_indicateur_label(self):
         return self.indicateur_var.get().strip()
+
+    def get_date_debut(self):
+        return self.start_date_var.get().strip()
+
+    def get_date_fin(self):
+        return self.end_date_var.get().strip()
 
     def get_plot_axes(self):
         return self.ax
