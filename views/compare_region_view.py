@@ -99,4 +99,4 @@ class CompareRegionView:
         return self.indicateur_var.get().strip()
 
     def set_on_compare_callback(self, callback):
-        self.on_compare_callback = callback
+
