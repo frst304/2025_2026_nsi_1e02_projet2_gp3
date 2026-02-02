@@ -54,6 +54,8 @@ def comparer_regions(
     value_col=None,
     normalize_regions=True,
     value_label=None,
+    ax=None,
+    show=True,
 ):
     if isinstance(regions, str):
         regions = [regions]
@@ -83,7 +85,12 @@ def comparer_regions(
             + ", ".join(df.columns)
         )
 
-    fig = plt.figure(figsize=(10, 5))
+    if ax is None:
+        fig = plt.figure(figsize=(10, 5))
+        ax = fig.add_subplot(111)
+    else:
+        fig = ax.figure
+        ax.clear()
 
     regions_absentes = []
     traces = 0
@@ -103,7 +110,7 @@ def comparer_regions(
         evolution.index = pd.to_datetime(evolution.index, errors="coerce")
         evolution = evolution[~evolution.index.isna()].sort_index()
         label = strip_accents(region) if normalize_regions else str(region)
-        plt.plot(evolution.index, evolution.values, label=label)
+        ax.plot(evolution.index, evolution.values, label=label)
         traces += 1
 
     if traces == 0:
@@ -117,28 +124,28 @@ def comparer_regions(
         titre = f"Comparaison des {value_label} par region"
     else:
         titre = "Comparaison des nouvelles hospitalisations Covid par region"
-    plt.title(titre)
-    plt.xlabel("Date")
-    plt.ylabel(value_label or "Nouvelles hospitalisations")
-    ax = plt.gca()
+    ax.set_title(titre)
+    ax.set_xlabel("Date")
+    ax.set_ylabel(value_label or "Nouvelles hospitalisations")
     locator = mdates.AutoDateLocator(minticks=4, maxticks=10)
     ax.xaxis.set_major_locator(locator)
     ax.xaxis.set_major_formatter(mdates.ConciseDateFormatter(locator))
     fig.autofmt_xdate()
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
+    ax.legend()
+    ax.grid(True)
+    fig.tight_layout()
     regions_titre = " vs ".join(
         strip_accents(r) if normalize_regions else str(r) for r in regions
     )
     fenetre_titre = (
         f"{value_label or 'Comparaison'} - {regions_titre}"
     )
-    try:
-        fig.canvas.manager.set_window_title(fenetre_titre)
-    except Exception:
-        pass
-    plt.show()
+    if show:
+        try:
+            fig.canvas.manager.set_window_title(fenetre_titre)
+        except Exception:
+            pass
+        plt.show()
 
     if regions_absentes:
         print(

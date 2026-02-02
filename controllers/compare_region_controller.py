@@ -32,6 +32,8 @@ class CompareRegionController:
 
         self._fill_view()
         self.view.set_on_compare_callback(self.lancer_comparaison)
+        self.view.set_on_selection_change(self.actualiser_graphique)
+        self.actualiser_graphique()
 
     def _regions_disponibles(self):
         if not self.region_col:
@@ -84,6 +86,41 @@ class CompareRegionController:
                 region_col=self.region_col,
                 value_col=indicateur_col,
                 value_label=indicateur_label,
+                ax=self.view.get_plot_axes(),
+                show=False,
             )
+            self.view.redraw_plot()
         except ValueError as exc:
             messagebox.showerror("Erreur", str(exc))
+
+    def actualiser_graphique(self):
+        if not self.region_col:
+            self.view.clear_plot("Aucune colonne de region detectee.")
+            return
+        region_1 = self.view.get_region_1()
+        region_2 = self.view.get_region_2()
+        indicateur_label = self.view.get_indicateur_label()
+        if not region_1 or not region_2 or not indicateur_label:
+            self.view.clear_plot("Selection incomplete.")
+            return
+        indicateur_col = None
+        for label, col in self.indicateurs_disponibles:
+            if label == indicateur_label:
+                indicateur_col = col
+                break
+        if not indicateur_col:
+            self.view.clear_plot("Indicateur invalide.")
+            return
+        try:
+            comparer_regions(
+                self.donnees,
+                [region_1, region_2],
+                region_col=self.region_col,
+                value_col=indicateur_col,
+                value_label=indicateur_label,
+                ax=self.view.get_plot_axes(),
+                show=False,
+            )
+            self.view.redraw_plot()
+        except ValueError as exc:
+            self.view.clear_plot(str(exc))

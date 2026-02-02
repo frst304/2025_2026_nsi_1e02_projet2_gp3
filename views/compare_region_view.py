@@ -1,6 +1,9 @@
 import tkinter as tk
 from tkinter import ttk
 
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+
 
 class CompareRegionView:
 
@@ -17,8 +20,14 @@ class CompareRegionView:
         )
         self.titre.pack(pady=20)
 
-        self.form_frame = tk.Frame(self.frame, bg="#f4f6f8")
-        self.form_frame.pack(pady=10)
+        self.content_frame = tk.Frame(self.frame, bg="#f4f6f8")
+        self.content_frame.pack(fill="both", expand=True, padx=20, pady=10)
+        self.content_frame.grid_columnconfigure(0, weight=0)
+        self.content_frame.grid_columnconfigure(1, weight=1)
+        self.content_frame.grid_rowconfigure(0, weight=1)
+
+        self.form_frame = tk.Frame(self.content_frame, bg="#f4f6f8")
+        self.form_frame.grid(row=0, column=0, sticky="nw")
 
         ttk.Label(self.form_frame, text="Region 1:", style="Texte.TLabel").pack(
             pady=(10, 5)
@@ -72,9 +81,24 @@ class CompareRegionView:
         )
         self.bouton_lancer.pack(pady=20)
 
+        self.graph_frame = tk.Frame(self.content_frame, bg="#f4f6f8")
+        self.graph_frame.grid(row=0, column=1, sticky="nsew", padx=(30, 0))
+        self.graph_frame.grid_rowconfigure(0, weight=1)
+        self.graph_frame.grid_columnconfigure(0, weight=1)
+
+        self.figure = Figure(figsize=(6, 4), dpi=100)
+        self.ax = self.figure.add_subplot(111)
+        self.canvas = FigureCanvasTkAgg(self.figure, master=self.graph_frame)
+        self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
+
     def _on_compare_click(self):
         if self.on_compare_callback:
             self.on_compare_callback()
+
+    def set_on_selection_change(self, callback):
+        self.liste_region_1.bind("<<ComboboxSelected>>", lambda _e: callback())
+        self.liste_region_2.bind("<<ComboboxSelected>>", lambda _e: callback())
+        self.liste_indicateur.bind("<<ComboboxSelected>>", lambda _e: callback())
 
     def set_regions(self, regions):
         self.liste_region_1["values"] = regions
@@ -97,6 +121,26 @@ class CompareRegionView:
 
     def get_indicateur_label(self):
         return self.indicateur_var.get().strip()
+
+    def get_plot_axes(self):
+        return self.ax
+
+    def redraw_plot(self):
+        self.canvas.draw()
+
+    def clear_plot(self, message=None):
+        self.ax.clear()
+        if message:
+            self.ax.text(
+                0.5,
+                0.5,
+                message,
+                ha="center",
+                va="center",
+                transform=self.ax.transAxes,
+            )
+            self.ax.set_axis_off()
+        self.canvas.draw()
 
     def set_on_compare_callback(self, callback):
         self.on_compare_callback = callback
