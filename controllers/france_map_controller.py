@@ -1,17 +1,23 @@
+# Import pour les fenêtres de dialogue Tkinter
 from tkinter import messagebox
 
+# Import pour manipuler des fichiers temporaires et ouvrir un navigateur
 import json
 import tempfile
 import webbrowser
 
+# Import pour la manipulation de données
 import pandas as pd
 import requests
 
+# Import des fonctions pour détecter les colonnes dates et régions
 from models.region_service import DATE_COL_CANDIDATES, first_existing_column
 
-
+# Liste des noms possibles pour la colonne des départements
 DEP_COL_CANDIDATES = ["dep", "departement", "code_dep", "code_departement"]
 
+# Liste des indicateurs disponibles pour les départements
+# (Nom affiché, nom de colonne dans le DataFrame)
 INDICATEURS_DEPARTEMENTAUX = [
     ("Hospitalisations (nouvelles)", "incid_hosp"),
     ("Reanimations (nouvelles)", "incid_rea"),
@@ -22,15 +28,19 @@ INDICATEURS_DEPARTEMENTAUX = [
 ]
 
 
+# Contrôleur pour la carte de France par départements
 class FranceMapController:
 
+    # Constructeur
     def __init__(self, donnees, view):
         self.donnees = donnees
         self.view = view
 
+        # Détection automatique des colonnes date et département
         self.date_col = first_existing_column(donnees, DATE_COL_CANDIDATES)
         self.dep_col = first_existing_column(donnees, DEP_COL_CANDIDATES)
 
+        # Filtrage des indicateurs disponibles en fonction des colonnes présentes
         self.indicateurs_disponibles = [
             (label, col)
             for label, col in INDICATEURS_DEPARTEMENTAUX
@@ -38,9 +48,13 @@ class FranceMapController:
         ]
         self.indicateur_labels = [label for label, _ in self.indicateurs_disponibles]
 
+        # Remplir la vue avec les indicateurs et dates
         self._fill_view()
+
+        # Définir le callback pour le bouton "Générer la carte"
         self.view.set_on_generate(self.generer_carte)
 
+    # Méthode interne pour récupérer les dates disponibles dans les données
     def _dates_disponibles(self):
         if not self.date_col or self.date_col not in self.donnees.columns:
             return []
@@ -54,11 +68,13 @@ class FranceMapController:
         )
         return dates
 
+    # Remplit la vue avec indicateurs et dates disponibles
     def _fill_view(self):
         self.view.set_indicateurs(self.indicateur_labels)
         dates = self._dates_disponibles()
         self.view.set_dates(dates)
 
+    # Vérifie que folium est installé et le charge
     def _charger_folium(self):
         try:
             import folium  # type: ignore
@@ -71,6 +87,7 @@ class FranceMapController:
             return None
         return folium
 
+    # Télécharge un GeoJSON contenant les départements de France
     def _telecharger_geojson_departements(self):
         """
         Telecharge un GeoJSON des departements de France.
@@ -90,7 +107,10 @@ class FranceMapController:
             )
             return None
 
+    # Méthode principale pour générer la carte interactive
     def generer_carte(self):
+
+        # Vérification que la colonne département existe
         if not self.dep_col:
             messagebox.showerror(
                 "Colonnes manquantes",
@@ -98,13 +118,15 @@ class FranceMapController:
             )
             return
 
+        # Charger folium
         folium = self._charger_folium()
         if folium is None:
             return
 
+        # Récupérer la date choisie dans la vue
         date_str = self.view.get_date()
         if not date_str and self.date_col and self.date_col in self.donnees.columns:
-            # On prend la derniere date disponible
+            # On prend la dernière date disponible
             dates = self._dates_disponibles()
             if dates:
                 date_str = dates[-1]
@@ -116,6 +138,7 @@ class FranceMapController:
             )
             return
 
+        # Récupérer l'indicateur choisi dans la vue
         indicateur_label = self.view.get_indicateur_label()
         indicateur_col = None
         for label, col in self.indicateurs_disponibles:
@@ -130,7 +153,7 @@ class FranceMapController:
             )
             return
 
-        # Filtrer les donnees pour la date choisie
+        # Filtrer les données pour la date choisie
         df = self.donnees.copy()
         if self.date_col and self.date_col in df.columns:
             df[self.date_col] = pd.to_datetime(df[self.date_col], errors="coerce")
@@ -144,7 +167,7 @@ class FranceMapController:
             )
             return
 
-        # Agregation par departement
+        # Agréger les valeurs par département
         df_dep = (
             df.groupby(self.dep_col)[indicateur_col]
             .sum()
@@ -152,13 +175,15 @@ class FranceMapController:
             .rename(columns={indicateur_col: "valeur"})
         )
 
+        # Télécharger le GeoJSON des départements
         geojson = self._telecharger_geojson_departements()
         if geojson is None:
             return
 
-        # Creation de la carte
+        # Création de la carte centrée sur la France
         m = folium.Map(location=[46.5, 2.0], zoom_start=5, tiles="cartodbpositron")
 
+        # Ajout du choropleth (carte colorée par valeur)
         folium.Choropleth(
             geo_data=geojson,
             name="choropleth",
@@ -171,7 +196,7 @@ class FranceMapController:
             legend_name=f"{indicateur_label} par departement",
         ).add_to(m)
 
-        # Popup avec valeur pour chaque departement
+        # Ajout des popups pour chaque département avec les valeurs
         dep_dict = {
             str(row[self.dep_col]): row["valeur"] for _, row in df_dep.iterrows()
         }
@@ -193,9 +218,10 @@ class FranceMapController:
                 )
             )
 
+        # Ajouter le contrôle des calques
         m.add_child(folium.LayerControl())
 
-        # Sauvegarde dans un fichier temporaire et ouverture dans le navigateur
+        # Sauvegarder la carte dans un fichier temporaire et ouvrir dans le navigateur
         try:
             with tempfile.NamedTemporaryFile(
                 suffix=".html", delete=False, mode="w", encoding="utf-8"
@@ -209,5 +235,5 @@ class FranceMapController:
             )
             return
 
+        # Ouverture automatique dans le navigateur par défaut
         webbrowser.open(url)
-
