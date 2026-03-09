@@ -35,18 +35,31 @@ class FranceMapView:
         )
         self.liste_indicateur.pack()
 
-        ttk.Label(self.form_frame, text="Date:", style="Texte.TLabel").pack(
+        ttk.Label(self.form_frame, text="Date de debut:", style="Texte.TLabel").pack(
             pady=(15, 5)
         )
-        self.date_var = tk.StringVar()
-        self.liste_date = ttk.Combobox(
+        self.start_date_var = tk.StringVar()
+        self.liste_date_debut = ttk.Combobox(
             self.form_frame,
-            textvariable=self.date_var,
+            textvariable=self.start_date_var,
             values=[],
             state="readonly",
             width=40,
         )
-        self.liste_date.pack()
+        self.liste_date_debut.pack()
+
+        ttk.Label(self.form_frame, text="Date de fin:", style="Texte.TLabel").pack(
+            pady=(15, 5)
+        )
+        self.end_date_var = tk.StringVar()
+        self.liste_date_fin = ttk.Combobox(
+            self.form_frame,
+            textvariable=self.end_date_var,
+            values=[],
+            state="readonly",
+            width=40,
+        )
+        self.liste_date_fin.pack()
 
         self.btn_generer = ttk.Button(
             self.form_frame,
@@ -69,17 +82,19 @@ class FranceMapView:
             self.indicateur_var.set("")
 
     def set_dates(self, dates):
-        self.liste_date["values"] = dates
-        if dates:
-            self.date_var.set(dates[-1])
-        else:
-            self.date_var.set("")
+        self.liste_date_debut["values"] = dates
+        self.liste_date_fin["values"] = dates
+        self.start_date_var.set("")
+        self.end_date_var.set("")
 
     def get_indicateur_label(self):
         return self.indicateur_var.get().strip()
 
-    def get_date(self):
-        return self.date_var.get().strip()
+    def get_date_debut(self):
+        return self.start_date_var.get().strip()
+
+    def get_date_fin(self):
+        return self.end_date_var.get().strip()
 
     def set_on_generate(self, callback):
         self.btn_generer.config(command=callback)

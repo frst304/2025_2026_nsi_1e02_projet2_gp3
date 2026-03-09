@@ -102,17 +102,12 @@ class FranceMapController:
         if folium is None:
             return
 
-        date_str = self.view.get_date()
-        if not date_str and self.date_col and self.date_col in self.donnees.columns:
-            # On prend la derniere date disponible
-            dates = self._dates_disponibles()
-            if dates:
-                date_str = dates[-1]
-
-        if not date_str:
+        date_debut = self.view.get_date_debut()
+        date_fin = self.view.get_date_fin()
+        if not date_debut or not date_fin:
             messagebox.showerror(
                 "Date manquante",
-                "Aucune date selectionnee et aucune date disponible.",
+                "Veuillez choisir une date de debut et une date de fin.",
             )
             return
 
@@ -130,17 +125,30 @@ class FranceMapController:
             )
             return
 
-        # Filtrer les donnees pour la date choisie
+        # Filtrer les donnees pour la periode choisie
         df = self.donnees.copy()
         if self.date_col and self.date_col in df.columns:
             df[self.date_col] = pd.to_datetime(df[self.date_col], errors="coerce")
-            date_cible = pd.to_datetime(date_str, errors="coerce")
-            df = df[df[self.date_col] == date_cible]
+            debut_dt = pd.to_datetime(date_debut, errors="coerce")
+            fin_dt = pd.to_datetime(date_fin, errors="coerce")
+            if pd.isna(debut_dt) or pd.isna(fin_dt):
+                messagebox.showerror(
+                    "Dates invalides",
+                    "Veuillez choisir des dates valides.",
+                )
+                return
+            if fin_dt < debut_dt:
+                messagebox.showerror(
+                    "Intervalle invalide",
+                    "La date de fin doit etre apres la date de debut.",
+                )
+                return
+            df = df[(df[self.date_col] >= debut_dt) & (df[self.date_col] <= fin_dt)]
 
         if df.empty:
             messagebox.showerror(
                 "Aucune donnee",
-                "Aucune donnee disponible pour la date selectionnee.",
+                "Aucune donnee disponible pour la periode selectionnee.",
             )
             return
 
